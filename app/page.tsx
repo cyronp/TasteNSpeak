@@ -5,6 +5,7 @@ const restaurants: {
   category: Category;
   rating: number;
   description: string;
+  visits: number;
 }[] = [
   {
     name: "Bella Tavola",
@@ -12,6 +13,7 @@ const restaurants: {
     rating: 5,
     description:
       "Autêntica culinária italiana com massas frescas e ambiente acolhedor.",
+    visits: 1247,
   },
   {
     name: "Café Central",
@@ -19,6 +21,7 @@ const restaurants: {
     rating: 4,
     description:
       "Café artesanal e doces caseiros em um espaço charmoso e histórico.",
+    visits: 892,
   },
   {
     name: "Sabor Brasileiro",
@@ -26,6 +29,7 @@ const restaurants: {
     rating: 5,
     description:
       "Comida brasileira tradicional feita com ingredientes frescos e muito sabor.",
+    visits: 1583,
   },
   {
     name: "Doce Momento",
@@ -33,6 +37,7 @@ const restaurants: {
     rating: 3,
     description:
       "Cafeteria moderna com opções de cafés especiais e sobremesas variadas.",
+    visits: 456,
   },
   {
     name: "La Pizzeria",
@@ -40,6 +45,7 @@ const restaurants: {
     rating: 4,
     description:
       "Pizzas artesanais assadas em forno à lenha com receitas tradicionais italianas.",
+    visits: 1098,
   },
   {
     name: "Bar do João",
@@ -47,6 +53,7 @@ const restaurants: {
     rating: 5,
     description:
       "Bar tradicional com petiscos deliciosos e ambiente descontraído.",
+    visits: 2341,
   },
   {
     name: "Sushi House",
@@ -54,12 +61,14 @@ const restaurants: {
     rating: 4,
     description:
       "Culinária japonesa autêntica com peixes frescos e pratos tradicionais.",
+    visits: 967,
   },
   {
     name: "Coffee Break",
     category: "Café",
     rating: 3,
     description: "Ponto de encontro perfeito para um café rápido e saboroso.",
+    visits: 634,
   },
   {
     name: "Churrascaria Gaúcha",
@@ -67,6 +76,7 @@ const restaurants: {
     rating: 5,
     description:
       "Carnes nobres preparadas no estilo gaúcho tradicional, rodízio completo.",
+    visits: 1876,
   },
   {
     name: "Padaria Nova",
@@ -74,6 +84,7 @@ const restaurants: {
     rating: 4,
     description:
       "Pães frescos diariamente e uma variedade de produtos de confeitaria.",
+    visits: 1523,
   },
   {
     name: "Bistro Francês",
@@ -81,6 +92,7 @@ const restaurants: {
     rating: 5,
     description:
       "Experiência gastronômica francesa sofisticada com vinhos selecionados.",
+    visits: 789,
   },
   {
     name: "Confeitaria Doce Vida",
@@ -88,6 +100,7 @@ const restaurants: {
     rating: 4,
     description:
       "Bolos artesanais, tortas e doces finos preparados com carinho.",
+    visits: 1145,
   },
 ];
 
@@ -103,6 +116,7 @@ export default function Home() {
             description={restaurant.description}
             category={restaurant.category}
             rating={restaurant.rating}
+            visits={restaurant.visits}
           />
         ))}
       </div>

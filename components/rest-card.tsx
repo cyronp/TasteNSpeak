@@ -10,6 +10,7 @@ interface RestaurantCardProps {
   description: string;
   category: Category;
   rating?: number;
+  visits: number;
 }
 
 export default function RestaurantCard({
@@ -18,6 +19,7 @@ export default function RestaurantCard({
   description,
   category,
   rating = 0,
+  visits,
 }: RestaurantCardProps) {
   const getCategoryIcon = () => {
     if (category === "Restaurante") {
@@ -42,8 +44,7 @@ export default function RestaurantCard({
         <h1 className="text-lg leading-tight font-semibold">{title}</h1>
         <h2 className="text-muted-foreground line-clamp-3 flex items-center">
           {getCategoryIcon()}
-          {category}
-          
+          {category} • {visits} visitas
         </h2>
         <p className="text-sm text-muted-foreground line-clamp-2">
           {description}
