@@ -37,7 +37,7 @@ function ListItem({
 
 export default function Header() {
   return (
-    <div className="sticky top-0 z-50 bg-background">
+    <div className="sticky top-0 z-50 bg-transparent backdrop-blur-md">
       <div className="flex justify-center items-center gap-6 p-2">
         <h1 className="font-bold text-3xl md:text-xl">Taste n' Speak</h1>
         <div className="md:flex relative w-64 hidden">
@@ -121,7 +121,10 @@ export default function Header() {
                 </ul>
               </NavigationMenuContent>
             </NavigationMenuItem>
-            <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+            <NavigationMenuLink
+              asChild
+              className={navigationMenuTriggerStyle()}
+            >
               <Link href="/wishlist">Lista de Desejos</Link>
             </NavigationMenuLink>
           </NavigationMenuList>
