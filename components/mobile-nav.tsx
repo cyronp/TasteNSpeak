@@ -26,8 +26,8 @@ export default function MobileNav() {
 
       {/* Input de pesquisa */}
       {searchOpen && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-white shadow-lg p-4 md:hidden">
-          <form onSubmit={handleSearch} className="flex items-center gap-2">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-transparent shadow-lg p-2 md:hidden">
+          <form onSubmit={handleSearch} className="flex items-center gap-2 bg-white/80 rounded-full border-none! ring-0!">
             <Input
               type="text"
               placeholder="Pesquisar restaurantes, cafés..."

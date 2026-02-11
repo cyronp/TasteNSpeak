@@ -224,6 +224,13 @@ const restaurants: Restaurant[] = [
           "Doces deliciosos e atendimento carinhoso. Ambiente aconchegante.",
         date: "2024-01-06",
       },
+      {
+        author: "Beatriz Santos",
+        rating: 4,
+        comment:
+          "Doces deliciosos e atendimento carinhoso. Ambiente aconchegante.",
+        date: "2024-01-06",
+      },
     ],
   },
 ];

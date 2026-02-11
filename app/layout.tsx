@@ -26,10 +26,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-br">
-      <Header />
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Header />
         {children}
         <MobileNav />
       </body>

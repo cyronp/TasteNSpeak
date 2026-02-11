@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { X, Star } from "lucide-react";
+import { X, Heart } from "lucide-react";
 import { type Category } from "./rest-card";
 
 type Review = {
@@ -32,6 +32,7 @@ export default function RestaurantModal({
   const [isDragging, setIsDragging] = useState(false);
   const [dragY, setDragY] = useState(0);
   const [startY, setStartY] = useState(0);
+  const [isClosing, setIsClosing] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -51,20 +52,36 @@ export default function RestaurantModal({
     if (scrollContainerRef.current.scrollTop === 0) {
       const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
       setStartY(clientY);
-      setIsDragging(true);
+      // Não ativa dragging imediatamente, espera o movimento
     }
   };
 
   const handleTouchMove = (e: React.TouchEvent | React.MouseEvent) => {
-    if (!isDragging) return;
+    if (!scrollContainerRef.current) return;
 
     const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
     const diff = clientY - startY;
 
-    // Só permite arrastar para baixo
-    if (diff > 0) {
+    // Se ainda não está em modo drag, verifica se deve iniciar
+    if (
+      !isDragging &&
+      startY !== 0 &&
+      scrollContainerRef.current.scrollTop === 0
+    ) {
+      // Só ativa drag se o movimento for claramente para baixo (mais de 5px)
+      if (diff > 5) {
+        setIsDragging(true);
+      }
+      // Se tentar scrollar para cima, cancela o potencial drag
+      if (diff < -5) {
+        setStartY(0);
+        return;
+      }
+    }
+
+    // Se está em modo drag, continua
+    if (isDragging && diff > 0) {
       setDragY(diff);
-      // Previne scroll enquanto arrasta
       e.preventDefault();
     }
   };
@@ -74,14 +91,23 @@ export default function RestaurantModal({
 
     const screenHeight = window.innerHeight;
 
-    // Se arrastou mais de 50% da tela, fecha a modal
     if (dragY > screenHeight * 0.5) {
       onClose();
     }
 
-    // Reset
     setDragY(0);
     setIsDragging(false);
+  };
+
+  const handleClose = () => {
+    setIsClosing(true);
+    setDragY(window.innerHeight);
+
+    setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+      setDragY(0);
+    }, 300);
   };
 
   if (!restaurant) return null;
@@ -101,73 +127,74 @@ export default function RestaurantModal({
 
       {/* Modal Content */}
       <div
-        className={`relative w-full max-w-md max-h-[90vh] bg-transparent rounded-t-3xl overflow-hidden shadow-2xl ${
+        className={`relative w-full max-w-md h-[90vh] bg-transparent flex flex-col shadow-2xl ${
           isDragging ? "select-none" : ""
         }`}
         style={{
           transform: `translateY(${dragY}px)`,
           transition: isDragging ? "none" : "transform 0.3s ease-out",
         }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleTouchStart}
-        onMouseMove={handleTouchMove}
-        onMouseUp={handleTouchEnd}
-        onMouseLeave={handleTouchEnd}
       >
-        {/* Botão Fechar Fixo */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-colors"
-        >
-          <X className="w-5 h-5 text-white" />
-        </button>
-
-        {/* Indicador de Drag */}
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20">
-          <div className="w-10 h-1 bg-white/40 rounded-full" />
-        </div>
-
         {/* Conteúdo com Scroll */}
         <div
           ref={scrollContainerRef}
-          className="overflow-y-auto max-h-[90vh] scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          className="overflow-y-auto flex-1 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] overscroll-contain"
+          style={{ overscrollBehavior: "contain" }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onMouseDown={handleTouchStart}
+          onMouseMove={handleTouchMove}
+          onMouseUp={handleTouchEnd}
+          onMouseLeave={handleTouchEnd}
         >
           {/* Imagem do Restaurante */}
-          <div className="relative w-full h-72">
+          <div className="relative w-full h-72 shrink-0 rounded-t-3xl overflow-hidden">
+            {/* Indicador de Drag */}
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30">
+              <div className="w-10 h-1 bg-white/60 rounded-full" />
+            </div>
+
+            {/* Botão Fechar */}
+            <button
+              onClick={handleClose}
+              className="absolute top-4 right-4 z-30 p-2 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-colors"
+            >
+              <X className="w-5 h-5 text-white" />
+            </button>
+
             <img
               src={`https://picsum.photos/seed/${restaurant.name}/800/600`}
               alt={restaurant.name}
               className="w-full h-full object-cover"
             />
             {/* Gradiente na parte inferior da imagem */}
-            <div className="absolute bottom-0 left-0 right-0 h-20 bg-linear-to-t from-white/60 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white/60 to-transparent pointer-events-none" />
           </div>
 
           {/* Informações do Restaurante - Card Branco Único */}
-          <div className="bg-white rounded-t-3xl -mt-12 relative z-10">
-            <div className="px-6 pt-6 pb-8 space-y-5">
+          <div className="bg-white rounded-t-3xl -mt-12 relative z-10 min-h-[calc(100vh-14rem)]">
+            <div className="px-6 pt-6 pb-16 space-y-5">
               {/* Nome do Restaurante */}
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">
                   {restaurant.name}
                 </h1>
-                <span className="inline-block px-3 py-1 bg-orange-100 text-orange-600 rounded-full text-xs font-medium">
+                <span className="inline-block rounded-full font-medium">
                   {restaurant.category}
                 </span>
               </div>
 
               {/* Estatísticas */}
-              <div className="pb-5 border-b border-gray-100">
+              <div className="">
                 <div className="flex items-center gap-4 mb-3">
                   <div className="flex items-center gap-1">
                     {[...Array(5)].map((_, i) => (
-                      <Star
+                      <Heart
                         key={i}
                         className={`w-5 h-5 ${
                           i < restaurant.rating
-                            ? "fill-yellow-400 text-yellow-400"
+                            ? "fill-red-500 text-red-500"
                             : "text-gray-300"
                         }`}
                       />
@@ -189,8 +216,8 @@ export default function RestaurantModal({
               </div>
 
               {/* Descrição */}
-              <div className="pb-5 border-b border-gray-100">
-                <h3 className="text-base font-bold text-gray-900 mb-2">
+              <div className="">
+                <h3 className="text-base font-bold text-gray-900 mb-1">
                   Sobre
                 </h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
@@ -216,11 +243,11 @@ export default function RestaurantModal({
                           </span>
                           <div className="flex items-center gap-1 mt-1">
                             {[...Array(5)].map((_, i) => (
-                              <Star
+                              <Heart
                                 key={i}
                                 className={`w-3.5 h-3.5 ${
                                   i < review.rating
-                                    ? "fill-yellow-400 text-yellow-400"
+                                    ? "fill-red-500 text-red-500"
                                     : "text-gray-300"
                                 }`}
                               />
