@@ -1,8 +1,19 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { X, Heart } from "lucide-react";
+import { X, Heart, MapPinCheck, Stamp } from "lucide-react";
 import { type Category } from "./rest-card";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "./ui/drawer";
 
 type Review = {
   author: string;
@@ -33,6 +44,11 @@ export default function RestaurantModal({
   const [dragY, setDragY] = useState(0);
   const [startY, setStartY] = useState(0);
   const [isClosing, setIsClosing] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewerName, setReviewerName] = useState("");
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -113,7 +129,7 @@ export default function RestaurantModal({
   if (!restaurant) return null;
 
   return (
-    <div className="fixed inset-0 z-100 flex items-end justify-center">
+    <div className="fixed inset-0 z-40 flex items-end justify-center">
       {/* Backdrop com blur e escuridão */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -169,7 +185,7 @@ export default function RestaurantModal({
               className="w-full h-full object-cover"
             />
             {/* Gradiente na parte inferior da imagem */}
-            <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white/60 to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 left-0 right-0 h-20 bg-linear-to-t from-white/60 to-transparent pointer-events-none" />
           </div>
 
           {/* Informações do Restaurante - Card Branco Único */}
@@ -177,7 +193,7 @@ export default function RestaurantModal({
             <div className="px-6 pt-6 pb-16 space-y-5">
               {/* Nome do Restaurante */}
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                <h1 className="text-2xl font-bold text-gray-900">
                   {restaurant.name}
                 </h1>
                 <span className="inline-block rounded-full font-medium">
@@ -268,7 +284,105 @@ export default function RestaurantModal({
             </div>
           </div>
         </div>
+
+        {/* Botão Flutuante */}
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-60">
+          <Button
+            onClick={() => setIsDrawerOpen(true)}
+            className="bg-red-400 hover:bg-red-600 rounded-full px-6 py-6 shadow-lg flex items-center gap-2 text-white font-semibold"
+          >
+            <MapPinCheck className="w-5 h-5" />
+            Marcar visita
+          </Button>
+        </div>
       </div>
+
+      {/* Drawer de Avaliação*/}
+      <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+        <DrawerContent className="max-w-md mx-auto">
+          <DrawerHeader>
+            <DrawerTitle>Deixe sua avaliação</DrawerTitle>
+            <DrawerDescription>
+              Descreva sua experiência em {restaurant.name}
+            </DrawerDescription>
+          </DrawerHeader>
+
+          <div className="px-4 pb-4 space-y-4">
+            {/* Rating com Corações */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Qual a sua nota?
+              </label>
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRating(star === rating ? 0 : star)}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    className="transition-transform hover:scale-110 cursor-pointer"
+                  >
+                    <Heart
+                      className={`w-8 h-8 transition-colors ${
+                        star <= (hoverRating || rating)
+                          ? "fill-red-500 text-red-500"
+                          : "text-gray-300"
+                      }`}
+                    />
+                  </button>
+                ))}
+                {rating > 0 && (
+                  <span className="text-sm text-gray-600 ml-2">
+                    {rating} de 5 corações
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Comentário */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">
+                Deixe sua opinião (opcional)
+              </label>
+              <textarea
+                placeholder="Escreva sua experiência.."
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+              />
+            </div>
+          </div>
+
+          <DrawerFooter>
+            <Button
+              onClick={() => {
+                if (rating > 0) {
+                  console.log({
+                    rating,
+                    comment: reviewText.trim() || "",
+                    date: new Date().toISOString(),
+                  });
+                  setRating(0);
+                  setReviewText("");
+                  setIsDrawerOpen(false);
+                }
+              }}
+              disabled={!rating}
+              className="bg-red-500 hover:bg-red-600 text-white w-full cursor-pointer"
+            >
+              <Stamp className="w-4 h-4" />
+              Marcar visita
+            </Button>
+            <DrawerClose asChild>
+              <Button variant="outline" className="w-full cursor-pointer">
+                Cancelar
+              </Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }
