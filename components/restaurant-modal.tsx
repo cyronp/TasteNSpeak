@@ -23,23 +23,28 @@ type Review = {
 };
 
 export type Restaurant = {
+  id: number;
   name: string;
   category: Category;
   rating: number;
   description: string;
   visits: number;
   reviews: Review[];
+  image_url?: string;
 };
 
 interface RestaurantModalProps {
   restaurant: Restaurant | null;
   onClose: () => void;
+  onVisitMarked?: () => void;
 }
 
 export default function RestaurantModal({
   restaurant,
   onClose,
+  onVisitMarked,
 }: RestaurantModalProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [dragY, setDragY] = useState(0);
   const [startY, setStartY] = useState(0);
@@ -50,6 +55,61 @@ export default function RestaurantModal({
   const [reviewText, setReviewText] = useState("");
   const [reviewerName, setReviewerName] = useState("");
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!rating || !restaurant) return;
+
+    if (!restaurant.id) {
+      alert("Erro: ID do restaurante não encontrado");
+      return;
+    }
+
+    const restaurantId =
+      typeof restaurant.id === "number"
+        ? restaurant.id
+        : parseInt(restaurant.id as any, 10);
+
+    if (isNaN(restaurantId)) {
+      alert("Erro: ID do restaurante inválido");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/reviews", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          restaurant_id: restaurantId,
+          rating,
+          opinion: reviewText.trim() || null,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao marcar visita");
+      }
+
+      setRating(0);
+      setReviewText("");
+      setReviewerName("");
+      setIsDrawerOpen(false);
+
+      onVisitMarked?.();
+
+      alert("Visita marcada com sucesso!");
+    } catch (error) {
+      console.error("Erro ao marcar visita:", error);
+      alert("Erro ao marcar visita. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     if (restaurant) {
@@ -180,7 +240,10 @@ export default function RestaurantModal({
             </button>
 
             <img
-              src={`https://picsum.photos/seed/${restaurant.name}/800/600`}
+              src={
+                restaurant.image_url ||
+                `https://picsum.photos/seed/${restaurant.name}/800/600`
+              }
               alt={restaurant.name}
               className="w-full h-full object-cover"
             />
@@ -307,80 +370,92 @@ export default function RestaurantModal({
             </DrawerDescription>
           </DrawerHeader>
 
-          <div className="px-4 pb-4 space-y-4">
-            {/* Rating com Corações */}
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Qual a sua nota?
-              </label>
-              <div className="flex items-center gap-2">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    onClick={() => setRating(star === rating ? 0 : star)}
-                    onMouseEnter={() => setHoverRating(star)}
-                    onMouseLeave={() => setHoverRating(0)}
-                    className="transition-transform hover:scale-110 cursor-pointer"
-                  >
-                    <Heart
-                      className={`w-8 h-8 transition-colors ${
-                        star <= (hoverRating || rating)
-                          ? "fill-red-500 text-red-500"
-                          : "text-gray-300"
-                      }`}
-                    />
-                  </button>
-                ))}
-                {rating > 0 && (
-                  <span className="text-sm text-gray-600 ml-2">
-                    {rating} de 5 corações
-                  </span>
-                )}
+          <form onSubmit={handleSubmit}>
+            <div className="px-4 pb-4 space-y-4">
+              {/* Nome do Avaliador */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">
+                  Seu nome (opcional)
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Digite seu nome"
+                  value={reviewerName}
+                  onChange={(e) => setReviewerName(e.target.value)}
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              {/* Rating com Corações */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Qual a sua nota? *
+                </label>
+                <div className="flex items-center gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setRating(star === rating ? 0 : star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      className="transition-transform hover:scale-110 cursor-pointer"
+                      disabled={isSubmitting}
+                    >
+                      <Heart
+                        className={`w-8 h-8 transition-colors ${
+                          star <= (hoverRating || rating)
+                            ? "fill-red-500 text-red-500"
+                            : "text-gray-300"
+                        }`}
+                      />
+                    </button>
+                  ))}
+                  {rating > 0 && (
+                    <span className="text-sm text-gray-600 ml-2">
+                      {rating} de 5 corações
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Comentário */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">
+                  Deixe sua opinião (opcional)
+                </label>
+                <textarea
+                  placeholder="Escreva sua experiência..."
+                  value={reviewText}
+                  onChange={(e) => setReviewText(e.target.value)}
+                  rows={4}
+                  disabled={isSubmitting}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                />
               </div>
             </div>
 
-            {/* Comentário */}
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
-                Deixe sua opinião (opcional)
-              </label>
-              <textarea
-                placeholder="Escreva sua experiência.."
-                value={reviewText}
-                onChange={(e) => setReviewText(e.target.value)}
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
-              />
-            </div>
-          </div>
-
-          <DrawerFooter>
-            <Button
-              onClick={() => {
-                if (rating > 0) {
-                  console.log({
-                    rating,
-                    comment: reviewText.trim() || "",
-                    date: new Date().toISOString(),
-                  });
-                  setRating(0);
-                  setReviewText("");
-                  setIsDrawerOpen(false);
-                }
-              }}
-              disabled={!rating}
-              className="bg-red-500 hover:bg-red-600 text-white w-full cursor-pointer"
-            >
-              <Stamp className="w-4 h-4" />
-              Marcar visita
-            </Button>
-            <DrawerClose asChild>
-              <Button variant="outline" className="w-full cursor-pointer">
-                Cancelar
+            <DrawerFooter>
+              <Button
+                type="submit"
+                disabled={!rating || isSubmitting}
+                className="bg-red-500 hover:bg-red-600 text-white w-full cursor-pointer"
+              >
+                <Stamp className="w-4 h-4" />
+                {isSubmitting ? "Enviando..." : "Marcar visita"}
               </Button>
-            </DrawerClose>
-          </DrawerFooter>
+              <DrawerClose asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full cursor-pointer"
+                  disabled={isSubmitting}
+                >
+                  Cancelar
+                </Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </form>
         </DrawerContent>
       </Drawer>
     </div>
