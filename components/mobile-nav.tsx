@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, Search, Plus, X } from "lucide-react";
+import { Home, Search, Plus, X, SearchIcon, MoveLeft, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Input } from "./ui/input";
@@ -26,24 +26,27 @@ export default function MobileNav() {
 
       {/* Input de pesquisa */}
       {searchOpen && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-transparent shadow-lg p-2 md:hidden">
-          <form onSubmit={handleSearch} className="flex items-center gap-2 bg-white/80 rounded-full border-none! ring-0!">
+        <div className="fixed top-0 left-0 right-0 z-50 p-2 md:hidden bg-white h-full">
+          <div className="border-b border-black p-2">
+          <form onSubmit={handleSearch} className="flex items-center gap-2 bg-white">
+            <button
+              type="button"
+              onClick={() => setSearchOpen(false)}
+              className="hover:bg-gray-100 cursor-pointer"
+            >
+              <ArrowLeft className="h-6 w-6" />
+            </button>
             <Input
               type="text"
               placeholder="Pesquisar restaurantes, cafés..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               autoFocus
-              className="flex-1"
+              className=" rounded-none p-1"
             />
-            <button
-              type="button"
-              onClick={() => setSearchOpen(false)}
-              className="p-2 hover:bg-gray-100 rounded-full"
-            >
-              <X size={24} />
-            </button>
+            <SearchIcon className="h-6 w-6"/>
           </form>
+          </div>
         </div>
       )}
 
